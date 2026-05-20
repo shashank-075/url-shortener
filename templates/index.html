@@ -8,6 +8,10 @@
         input[type="submit"] { padding: 8px 15px; }
         .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; }
         .result a { font-weight: bold; }
+        .recent-links { margin-top: 2em; }
+        .recent-links ul { list-style-type: none; padding: 0; }
+        .recent-links li { background-color: #f9f9f9; margin-bottom: 10px; padding: 10px; border-left: 3px solid #ccc; }
+        .recent-links .long-url { word-wrap: break-word; color: #555; }
     </style>
 </head>
 <body>
@@ -22,6 +26,20 @@
     <div class="result">
         <p>Original URL: {{ long_url }}</p>
         <p>Shortened URL: <a href="{{ short_url }}" target="_blank">{{ short_url }}</a></p>
+    </div>
+    {% endif %}
+
+    {% if recent_links %}
+    <div class="recent-links">
+        <h2>Recently Created Links</h2>
+        <ul>
+            {% for link in recent_links %}
+            <li>
+                <p class="long-url">Original: {{ link.long_url }}</p>
+                <p>Shortened: <a href="{{ link.short_url }}" target="_blank">{{ link.short_url }}</a></p>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
     {% endif %}
 </body>
