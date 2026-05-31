@@ -82,7 +82,7 @@ async def create_url(request: Request, long_url: str = Form(...), db: Session = 
     recent_links = request.session.get("recent_links", [])
 
     # Remove the link if it already exists to avoid duplicates and move it to the top
-    recent_links = [link for link in recent_links if link.get("short_code") != db_url.short_code]
+    recent_links = [link for link in recent_links if link.get("long_url") != long_url]
 
     # Add the new link to the beginning of the list
     recent_links.insert(0, new_link)
@@ -115,6 +115,11 @@ async def delete_recent(request: Request, short_code: str):
     recent_links = request.session.get("recent_links", [])
     recent_links = [link for link in recent_links if link.get("short_code") != short_code]
     request.session["recent_links"] = recent_links
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/clear-history", response_class=RedirectResponse)
+async def clear_history(request: Request):
+    request.session["recent_links"] = []
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

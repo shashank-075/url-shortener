@@ -64,6 +64,11 @@
     {% if recent_links %}
     <div class="links-section">
         <h2>Recently Created Links</h2>
+        <div style="margin-bottom: 10px;">
+            <form action="/clear-history" method="post" style="display: inline;">
+                <button type="submit" style="padding: 8px 15px; background-color: #dc3545; color: white; border: none; cursor: pointer; border-radius: 3px;">Clear History</button>
+            </form>
+        </div>
         <ul>
             {% for link in recent_links %}
             <li>
