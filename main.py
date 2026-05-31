@@ -33,7 +33,7 @@ def get_db():
         db.close()
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
+async def read_root(request: Request, db: Session = Depends(get_db)):
     # Get the last result from the session if it exists (flash message)
     last_result = request.session.get("last_result")
     if last_result:
@@ -42,8 +42,24 @@ async def read_root(request: Request):
         
     recent_links = request.session.get("recent_links", [])
     
+    # Get favorite links
+    db_favorites = crud.get_favorite_urls(db)
+    base_url = str(request.base_url)
+    favorite_links = [
+        {
+            "long_url": fav.long_url,
+            "short_url": base_url + fav.short_code,
+            "short_code": fav.short_code,
+        }
+        for fav in db_favorites
+    ]
+
     # Combine contexts for rendering
-    context = {"request": request, "recent_links": recent_links}
+    context = {
+        "request": request, 
+        "recent_links": recent_links, 
+        "favorite_links": favorite_links
+    }
     if last_result:
         context.update(last_result)
         
@@ -56,13 +72,17 @@ async def create_url(request: Request, long_url: str = Form(...), db: Session = 
     base_url = str(request.base_url)
     short_url = base_url + db_url.short_code
     
-    new_link = {"long_url": long_url, "short_url": short_url}
+    new_link = {
+        "long_url": long_url, 
+        "short_url": short_url, 
+        "short_code": db_url.short_code
+    }
 
     # Get recent links from session
     recent_links = request.session.get("recent_links", [])
 
     # Remove the link if it already exists to avoid duplicates and move it to the top
-    recent_links = [link for link in recent_links if link["short_url"] != short_url]
+    recent_links = [link for link in recent_links if link.get("short_code") != db_url.short_code]
 
     # Add the new link to the beginning of the list
     recent_links.insert(0, new_link)
@@ -73,11 +93,30 @@ async def create_url(request: Request, long_url: str = Form(...), db: Session = 
     # Store the result for the next page load (flash message)
     request.session["last_result"] = {
         "short_url": short_url,
-        "long_url": long_url
+        "long_url": long_url,
+        "short_code": db_url.short_code
     }
     
     # Redirect to the main page
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/favorite/{short_code}", response_class=RedirectResponse)
+async def add_favorite(short_code: str, db: Session = Depends(get_db)):
+    crud.update_favorite_status(db, short_code=short_code, is_favorite=True)
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/unfavorite/{short_code}", response_class=RedirectResponse)
+async def remove_favorite(short_code: str, db: Session = Depends(get_db)):
+    crud.update_favorite_status(db, short_code=short_code, is_favorite=False)
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/delete/recent/{short_code}", response_class=RedirectResponse)
+async def delete_recent(request: Request, short_code: str):
+    recent_links = request.session.get("recent_links", [])
+    recent_links = [link for link in recent_links if link.get("short_code") != short_code]
+    request.session["recent_links"] = recent_links
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @app.get("/{short_code}")
 async def redirect_to_url(short_code: str, db: Session = Depends(get_db)):

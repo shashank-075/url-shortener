@@ -20,3 +20,14 @@ def create_short_url(db: Session, url: schemas.URLCreate):
     db.commit()
     db.refresh(db_url)
     return db_url
+
+def get_favorite_urls(db: Session):
+    return db.query(models.URL).filter(models.URL.is_favorite == True).all()
+
+def update_favorite_status(db: Session, short_code: str, is_favorite: bool):
+    db_url = db.query(models.URL).filter(models.URL.short_code == short_code).first()
+    if db_url:
+        db_url.is_favorite = is_favorite
+        db.commit()
+        db.refresh(db_url)
+    return db_url
