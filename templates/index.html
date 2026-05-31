@@ -8,10 +8,21 @@
         input[type="submit"] { padding: 8px 15px; }
         .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; }
         .result a { font-weight: bold; }
-        .recent-links { margin-top: 2em; }
-        .recent-links ul { list-style-type: none; padding: 0; }
-        .recent-links li { background-color: #f9f9f9; margin-bottom: 10px; padding: 10px; border-left: 3px solid #ccc; }
-        .recent-links .long-url { word-wrap: break-word; color: #555; }
+        .links-section { margin-top: 2em; }
+        .links-section ul { list-style-type: none; padding: 0; }
+        .links-section li { 
+            background-color: #f9f9f9; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            border-left: 3px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .links-section .long-url { word-wrap: break-word; color: #555; }
+        .links-section .actions form { margin-left: 10px; }
+        .links-section .actions button { background: none; border: 1px solid #007bff; color: #007bff; cursor: pointer; padding: 3px 8px; border-radius: 3px;}
+        .links-section .actions .remove-btn { border-color: #dc3545; color: #dc3545; }
     </style>
 </head>
 <body>
@@ -29,14 +40,42 @@
     </div>
     {% endif %}
 
+    {% if favorites %}
+    <div class="links-section">
+        <h2>Favorites</h2>
+        <ul>
+            {% for link in favorites %}
+            <li>
+                <div>
+                    <p class="long-url">Original: {{ link.long_url }}</p>
+                    <p>Shortened: <a href="{{ link.short_url }}" target="_blank">{{ link.short_url }}</a></p>
+                </div>
+                <div class="actions">
+                    <form action="/unfavorite/{{ link.short_code }}" method="post" style="display: inline;">
+                        <button type="submit" title="Remove from Favorites" style="background: none; border: none; cursor: pointer; font-size: 18px;">⭐</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     {% if recent_links %}
-    <div class="recent-links">
+    <div class="links-section">
         <h2>Recently Created Links</h2>
         <ul>
             {% for link in recent_links %}
             <li>
-                <p class="long-url">Original: {{ link.long_url }}</p>
-                <p>Shortened: <a href="{{ link.short_url }}" target="_blank">{{ link.short_url }}</a></p>
+                <div>
+                    <p class="long-url">Original: {{ link.long_url }}</p>
+                    <p>Shortened: <a href="{{ link.short_url }}" target="_blank">{{ link.short_url }}</a></p>
+                </div>
+                <div class="actions">
+                    <form action="/favorite/{{ link.short_code }}" method="post" style="display: inline;">
+                        <button type="submit" title="Add to Favorites" style="background: none; border: none; cursor: pointer; font-size: 18px;">⭐</button>
+                    </form>
+                </div>
             </li>
             {% endfor %}
         </ul>

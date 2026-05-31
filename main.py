@@ -58,7 +58,7 @@ async def read_root(request: Request, db: Session = Depends(get_db)):
     context = {
         "request": request, 
         "recent_links": recent_links, 
-        "favorite_links": favorite_links
+        "favorites": favorite_links
     }
     if last_result:
         context.update(last_result)
